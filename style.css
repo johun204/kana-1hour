@@ -166,3 +166,41 @@ table.pairs tr { display: flex; flex-wrap: wrap; gap: 6px; }
 .row input { width: 22px; height: 22px; accent-color: var(--red); }
 .ios { display: inline-block; transform: rotate(-90deg); }
 .typer .primary { flex: none; }
+
+/* 그림 · 획순 · 따라쓰기 */
+.vis { display: flex; justify-content: center; }
+.trace.pic { background: #fbf3e4; overflow: hidden; }
+.trace.pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+.vtabs { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.vtabs button { padding: 6px 12px; border-radius: 99px; background: var(--bg); font-size: 13px; font-weight: 700; color: var(--mute); }
+.vtabs button.on { background: var(--red); color: #fff; }
+.ksvg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ksvg path { stroke: var(--ink); stroke-width: 5; }
+.card.k .ksvg path { stroke: var(--ind); }
+.ksvg path.hl, .card .ksvg path.hl { stroke: var(--red); stroke-width: 6; }
+.ksvg .num circle { fill: #8a7f78; } .ksvg .num.hl circle { fill: var(--red); }
+.ksvg .num text { fill: #fff; font: 700 6px sans-serif; text-anchor: middle; dominant-baseline: central; }
+.ksvg.anim path { stroke-dasharray: 1; stroke-dashoffset: 1; marker-end: none; animation: draw .7s ease-in-out forwards; animation-delay: calc(var(--i) * .8s); }
+.ksvg.anim .num { opacity: 0; animation: fadein .2s forwards; animation-delay: calc(var(--i) * .8s); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fadein { to { opacity: 1; } }
+
+/* 닮은꼴 비교 */
+.cmp { background: var(--card); border-radius: 20px; padding: 14px; margin: 12px 0; box-shadow: 0 4px 16px #0000000a; }
+.page .cmp { box-shadow: none; border: 1px solid var(--line); }
+.ckey { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; margin-bottom: 10px; }
+.ckey button { flex: none; font-size: 12px; padding: 5px 10px; border-radius: 99px; background: var(--red2); color: var(--red); font-weight: 700; }
+.crow { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+.ccol { text-align: center; min-width: 0; }
+.cbox { position: relative; aspect-ratio: 1; border-radius: 14px; cursor: pointer; background: repeating-linear-gradient(0deg, transparent 0 49.5%, #f3e7da 49.5% 50.5%, transparent 50.5%), repeating-linear-gradient(90deg, transparent 0 49.5%, #f3e7da 49.5% 50.5%, transparent 50.5%), #fffdf8; }
+.cbox .ksvg path { stroke-width: 6.5; } .cbox .ksvg path.hl { stroke-width: 7.5; }
+.cread { margin-top: 4px; font-weight: 700; font-size: 14px; }
+.cread b { font-size: 20px; color: var(--ink); }
+.ccol p { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #5c524c; text-align: left; }
+.cmp .ghost.wide { margin-top: 12px; padding: 10px; font-size: 14px; }
+.cwarn { display: block; width: 100%; margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: #fff4e6; color: #a35a00; font-size: 13px; font-weight: 700; text-align: left; }
+.cwarn b { color: #a35a00; font-size: 17px; }
+.ngimg { width: 150px; height: 150px; border-radius: 16px; display: block; margin: 0 auto 6px; }
+#fb .cmp { margin: 10px 0 0; box-shadow: none; border: 1px solid var(--line); text-align: left; }
+.nav button { max-width: 112px; }
+.ksvg marker path { stroke: none; fill: var(--red); }

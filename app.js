@@ -114,20 +114,6 @@ const PAGES = {
      </table>
      <p class="tip">"<b>시응</b>은 누워 있고, <b>츠소</b>는 서 있다" — 이 한 줄만 기억!</p>`
   ],
-  kC: [
-    `<h2>⚖️ 헷갈리는 짝 총정리</h2>
-     <table class="rule" lang="ja">
-      <tr><td>シ / ツ</td><td>점 세로·획 위로 = シ / 점 가로·획 아래로 = ツ</td></tr>
-      <tr><td>ソ / ン</td><td>획이 내려옴 = ソ / 획이 올라감 = ン</td></tr>
-      <tr><td>ク / ケ / タ</td><td>ク 기본 / ケ 꼬리가 밖으로(K) / タ 안에 획</td></tr>
-      <tr><td>ウ / ワ / フ</td><td>점+지붕 = ウ / 지붕만 = ワ / 갈고리만 = フ</td></tr>
-      <tr><td>ス / ヌ</td><td>스키 = ス / 젓가락 하나 더 = ヌ</td></tr>
-      <tr><td>コ / ユ / ロ</td><td>코너 = コ / 아래 줄 튀어나옴 = ユ / 닫힌 네모 = ロ</td></tr>
-      <tr><td>チ / テ</td><td>위가 비스듬 = チ / 위가 평평 = テ</td></tr>
-      <tr><td>ナ / メ</td><td>십자 = ナ / X = メ</td></tr>
-      <tr><td>マ / ア</td><td>꼬리가 오른쪽 아래로 = マ / 가운데로 = ア</td></tr>
-     </table>`
-  ],
   kD: [
     `<h2>가타카나도 규칙은 같다</h2>
      <table class="pairs" lang="ja"><tr>${'ガがザざダだバばパぱ'.match(/../g).map(p => `<td>${p[0]}<small>${p[1]}</small></td>`).join('')}</tr></table>
@@ -140,6 +126,49 @@ const PAGES = {
      <p class="tip">작은 ッ도 같은 받침 규칙: <span lang="ja">サッカー</span> = 삭카- (축구)</p>`
   ]
 };
+
+// ───────── 획 SVG · 닮은꼴 비교 ─────────
+function kanaSVG(ch, o = {}) {
+  const ps = STROKES[ch];
+  if (!ps) return `<div class="ghostc len${Math.min(ch.length, 6)}" lang="ja">${ch}</div>`;
+  const hl = o.hl || [];
+  let s = `<svg class="ksvg${o.anim ? ' anim' : ''}" viewBox="0 0 109 109"><defs><marker id="ar" viewBox="0 0 10 10" refX="4" refY="5" markerWidth="2.4" markerHeight="2.4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#e5484d"/></marker></defs>`;
+  ps.forEach((d, i) => { s += `<path d="${d}" pathLength="1" style="--i:${i}"${hl.includes(i) ? ` class="hl"${o.arrows ? ' marker-end="url(#ar)"' : ''}` : ''}/>`; });
+  ps.forEach((d, i) => {
+    if (!o.nums && !hl.includes(i)) return;
+    const [x, y] = d.match(/M\s*([\d.]+)[ ,]+([\d.]+)/).slice(1);
+    s += `<g class="num${hl.includes(i) ? ' hl' : ''}" style="--i:${i}"><circle cx="${x}" cy="${y}" r="4.6"/><text x="${x}" y="${y}">${i + 1}</text></g>`;
+  });
+  return s + '</svg>';
+}
+const confOf = q => CONFUSE.filter(g => g.c.includes(q));
+function compareHTML(g, only) {
+  const gi = CONFUSE.indexOf(g);
+  return `<div class="cmp"><div class="ckey"><span>🔑 ${g.key}</span><button onclick="A.replay(this)">▶ 획순</button></div>
+    <div class="crow">${[...(only || g.c)].map(ch => {
+      const it = byQ[ch];
+      return `<div class="ccol"><div class="cbox" onclick="A.say('${ch}')">${kanaSVG(ch, { hl: g.hl[ch], arrows: true, nums: true })}</div>
+        <div class="cread"><b lang="ja">${ch}</b> ${it.r} · ${it.k}</div><p>${g.n[ch]}</p></div>`;
+    }).join('')}</div>${only ? '' : `<button class="ghost wide" onclick="A.cdrill('${g.s}',${gi})">🎯 ${[...g.c].join(' · ')} 구분 훈련</button>`}</div>`;
+}
+function confPages(script) {
+  const gs = CONFUSE.filter(g => g.s === script), out = [];
+  for (let i = 0; i < gs.length; i += 3)
+    out.push((i ? '' : `<h2>⚖️ 닮은꼴 구분법</h2><p class="sub"><b>빨간 획</b>이 구분 포인트, 화살표는 쓰는 방향이에요. 퀴즈는 닮은 글자끼리만 보기로 나옵니다.</p>`)
+      + gs.slice(i, i + 3).map(g => compareHTML(g)).join(''));
+  return out;
+}
+// 닮은꼴 퀴즈: 보기는 같은 묶음의 글자만 → 순수하게 모양 구분만 훈련
+function confQuiz(script, gi) {
+  const gs = gi == null ? CONFUSE.filter(g => g.s === script) : [CONFUSE[gi]];
+  const seen = new Set(), items = [];
+  gs.forEach(g => [...g.c].forEach(ch => {
+    if (seen.has(ch)) return;
+    seen.add(ch); items.push({ it: byQ[ch], cands: [...g.c].map(c => byQ[c]) });
+  }));
+  return { items, need: gi == null ? 1 : 2, mode: gi == null ? 'mix2' : 'learn',
+    title: gi == null ? '⚖️ 닮은꼴 전체 훈련' : `⚖️ ${[...gs[0].c].join(' · ')} 구분`, again: `A.cdrill('${script}'${gi == null ? '' : ',' + gi})` };
+}
 
 const L = [];
 function rowLessons(set, script, min, prefix) {
@@ -166,25 +195,24 @@ L.push({ id: 'h0', part: 'h', min: 1, type: 'intro', title: '시작: 1시간 완
 rowLessons(H, 'h', 2, 'h');
 L.push({ id: 'hD', part: 'h', min: 2, type: 'rule', title: '゛゜ 탁음·반탁음', sub: '규칙 하나로 25자', pages: PAGES.hD,
   quiz: () => ({ items: withCands(sample(HD, 12), HD), need: 1, mode: 'mix2' }) });
-L.push({ id: 'hY', part: 'h', min: 3, type: 'rule', title: 'ゃゅょ っ 요음·촉음·장음', sub: '단어 읽기 연습', pages: PAGES.hY,
+L.push({ id: 'hY', part: 'h', min: 2.5, type: 'rule', title: 'ゃゅょ っ 요음·촉음·장음', sub: '단어 읽기 연습', pages: PAGES.hY,
   quiz: () => ({ items: [...withCands(sample(HY, 9), HY), ...withCands(sample(WH, 8), WH)], need: 1, mode: 'mix2' }) });
-L.push({ id: 'hT', part: 'h', min: 3, type: 'test', title: '🏁 히라가나 최종 테스트', sub: '90% 이상이면 합격',
+L.push({ id: 'hC', part: 'h', min: 1.5, type: 'rule', title: '⚖️ 닮은꼴 히라가나 구분', sub: 'ぬめ るろ ねれわ はほけ さちき…', pages: confPages('h'),
+  quiz: () => confQuiz('h') });
+L.push({ id: 'hT', part: 'h', min: 2.5, type: 'test', title: '🏁 히라가나 최종 테스트', sub: '90% 이상이면 합격',
   quiz: () => ({ items: [...withCands(H, H), ...withCands(sample(HD, 4), HD), ...withCands(sample(HY, 3), HY)], need: 1, mode: 'test' }) });
 
 L.push({ id: 'k0', part: 'k', min: 1, type: 'intro', title: '가타카나 시작: 이미 반은 안다', sub: '히라가나와 짝짓기', pages: PAGES.k0 });
 rowLessons(K, 'k', 1.5, 'k');
-L.push({ id: 'kC', part: 'k', min: 1.5, type: 'rule', title: '⚖️ 헷갈리는 글자 집중 훈련', sub: 'シツ ソン クケタ ウワフ…', pages: PAGES.kC,
-  quiz: () => {
-    const set = 'シツソンクケタウワフスヌコユロチテナメマア'.split('').map(c => byQ[c]);
-    return { items: withCands(set, set), need: 1, mode: 'mix2' };
-  } });
+L.push({ id: 'kC', part: 'k', min: 1.5, type: 'rule', title: '⚖️ 닮은꼴 가타카나 구분', sub: 'シツ ソン クケタ ウワフ コユロ…', pages: confPages('k'),
+  quiz: () => confQuiz('k') });
 L.push({ id: 'kD', part: 'k', min: 1.5, type: 'rule', title: 'ガ パ キャ ー 탁음·요음·장음', sub: '히라가나와 같은 규칙', pages: PAGES.kD,
   quiz: () => ({ items: [...withCands(sample(KD, 8), KD), ...withCands(sample(KY, 6), KY)], need: 1, mode: 'mix2' }) });
 L.push({ id: 'kW', part: 'k', min: 1.5, type: 'rule', title: '🍔 외래어 읽기', sub: 'コーヒー テレビ ラーメン…',
   quiz: () => ({ items: withCands(sample(WK, 14), WK), need: 1, mode: 'k2s' }) });
 L.push({ id: 'kT', part: 'k', min: 2, type: 'test', title: '🏁 가타카나 최종 테스트', sub: '90% 이상이면 합격',
   quiz: () => ({ items: [...withCands(K, K), ...withCands(sample(KD, 4), KD), ...withCands(sample(WK, 3), WK)], need: 1, mode: 'test' }) });
-L.push({ id: 'F', part: 'f', min: 2, type: 'test', title: '👑 마스터 테스트', sub: '히라가나 + 가타카나 랜덤 40문제',
+L.push({ id: 'F', part: 'f', min: 1.5, type: 'test', title: '👑 마스터 테스트', sub: '히라가나 + 가타카나 랜덤 40문제',
   quiz: () => ({ items: [...withCands(pickWeak(H, 20), H), ...withCands(pickWeak(K, 20), K)], need: 1, mode: 'test' }) });
 
 const TOTAL_MIN = L.reduce((s, l) => s + l.min, 0);
@@ -259,6 +287,7 @@ function home() {
 const navbar = cur => `<nav class="nav">
   <button class="${cur === 'home' ? 'on' : ''}" onclick="A.home()">📚<small>학습</small></button>
   <button class="${cur === 'chart' ? 'on' : ''}" onclick="A.chart('h')">🗂<small>50음도</small></button>
+  <button class="${cur === 'conf' ? 'on' : ''}" onclick="A.confuse('h')">⚖️<small>닮은꼴</small></button>
   <button class="${cur === 'review' ? 'on' : ''}" onclick="A.review()">🔁<small>약점 복습</small></button>
   <button class="${cur === 'set' ? 'on' : ''}" onclick="A.settings()">⚙️<small>설정</small></button></nav>`;
 
@@ -295,13 +324,39 @@ function afterLesson(l) {
 }
 
 // ───────── 글자 카드 ─────────
+const imgOf = it => !it.word && STROKES[it.q] ? `img/${it.script}-${it.r}.jpg` : null;
+const VIS = [['img', '🖼 그림'], ['stroke', '▶ 획순'], ['trace', '✍️ 따라쓰기']];
+function visBody(it, mode) {
+  if (mode === 'img') return `<div class="trace pic">${kanaSVG(it.q)}<img src="${imgOf(it)}" alt="" onerror="this.remove()"></div>`;
+  if (mode === 'stroke') return `<div class="trace">${kanaSVG(it.q, { anim: true, nums: true })}<button class="clr" onclick="A.vis(this,'stroke')" title="다시">↺</button></div>`;
+  return `<div class="trace"><div class="ghostc len${Math.min(it.q.length, 6)}" lang="ja">${it.q}</div><canvas></canvas><button class="clr" onclick="A.clear(this)" title="지우기">↺</button></div>`;
+}
 function cardHTML(it) {
+  const has = !!STROKES[it.q], mode = has ? (S.vis || 'img') : 'trace';
   const pair = it.script === 'k' && it.pair ? `<div class="pair">히라가나 짝 <b lang="ja">${it.pair}</b></div>` : '';
-  return `<div class="card ${it.script}">
-    <div class="trace"><div class="ghostc len${Math.min(it.q.length, 6)}" lang="ja">${it.q}</div><canvas></canvas><button class="clr" onclick="A.clear(this)" title="지우기">↺</button></div>
+  const warn = confOf(it.q).map(g => `<button class="cwarn" onclick="A.cmp(${CONFUSE.indexOf(g)})">⚖️ 닮은꼴 <b lang="ja">${[...g.c].filter(c => c !== it.q).join(' ')}</b> 주의 — ${g.key} ›</button>`).join('');
+  return `<div class="card ${it.script}" data-q="${it.q}">
+    <div class="vis">${visBody(it, mode)}</div>
+    ${has ? `<div class="vtabs">${VIS.map(([m, t]) => `<button class="${m === mode ? 'on' : ''}" onclick="A.vis(this,'${m}')">${t}</button>`).join('')}</div>` : ''}
     <div class="read"><span class="rom">${it.r}</span><span class="kor">${it.k}</span><button class="spk" onclick="A.say('${it.q}')">🔊</button></div>
-    <div class="mn">${it.e ? `<span class="emo">${it.e}</span>` : ''}<p>${it.m}</p></div>${pair}
-    <p class="hint">✍️ 위 글자를 손가락으로 따라 써 보세요 · 이야기를 소리 내어 읽기</p></div>`;
+    <div class="mn">${it.e ? `<span class="emo">${it.e}</span>` : ''}<p>${it.m}</p></div>${pair}${warn}</div>`;
+}
+function setVis(btn, m) {
+  const card = btn.closest('.card'), it = byQ[card.dataset.q];
+  S.vis = m; save();
+  card.querySelector('.vis').innerHTML = visBody(it, m);
+  card.querySelectorAll('.vtabs button').forEach((b, i) => b.classList.toggle('on', VIS[i][0] === m));
+  initTrace();
+}
+function replay(btn) {
+  btn.closest('.cmp').querySelectorAll('.ksvg').forEach(sv => { sv.classList.remove('anim'); sv.getBBox(); sv.classList.add('anim'); });
+}
+function cmp(gi) {
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = `<div class="sheet">${compareHTML(CONFUSE[gi])}<button class="primary wide" onclick="this.closest('.modal').remove()">닫기</button></div>`;
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  document.body.appendChild(m);
 }
 function showCard() {
   screen = 'lesson';
@@ -381,7 +436,7 @@ function nextQ() {
       <div class="choices ${s2k ? 'kanas' : ''}">${e.opts.map((o, i) => `<button data-i="${i}" onclick="A.pick(${i})">${s2k ? `<span lang="ja">${o.q}</span>` : label(o)}<kbd>${i + 1}</kbd></button>`).join('')}</div>`;
     if (s2k) say(it.q);
   }
-  app.innerHTML = topbar(esc(Q.lesson ? Q.lesson.title : '약점 복습')) +
+  app.innerHTML = topbar(esc(Q.lesson ? Q.lesson.title : (Q.cfg.title || '약점 복습'))) +
     `<div class="qbar"><i style="width:${pct}%"></i></div><div class="score">✅ ${Q.right} · ❌ ${Q.wrong} · 남은 ${Q.queue.length + 1}</div>
     <main class="quiz">${body}<div id="fb"></div></main>`;
   const inp = $('#ans'); if (inp) inp.focus();
@@ -399,7 +454,10 @@ function typed(ev) {
   if (Q.locked) return;
   const v = ev ? $('#ans').value.trim() : '';
   if (ev && !v) return;
-  answer(v && accepts(Q.cur.it).ok(v), null);
+  const it = Q.cur.it, ok = !!v && accepts(it).ok(v);
+  // 닮은꼴의 발음을 입력했다면 그 글자와 헷갈린 것 → 비교 카드
+  const mixed = ok || !v ? null : confOf(it.q).flatMap(g => [...g.c]).map(c => byQ[c]).find(x => x !== it && accepts(x).ok(v));
+  answer(ok, mixed || null);
 }
 function pick(i) {
   if (Q.locked) return;
@@ -429,9 +487,12 @@ function answer(ok, chosen) {
     if (e.left < Q.cfg.need + 1) { e.left++; Q.total++; }
     Q.queue.splice(Math.min(Q.queue.length, 2), 0, e);
   }
-  const conf = chosen && chosen !== it ? `<p class="conf">고른 것: <b lang="ja">${chosen.q}</b> = ${chosen.r} ${chosen.k}</p>` : '';
+  const g = chosen && chosen !== it ? CONFUSE.find(g => g.c.includes(it.q) && g.c.includes(chosen.q)) : null;
+  const conf = g ? `<p class="conf">⚖️ <b lang="ja">${chosen.q}</b>(${chosen.r})와 헷갈렸어요! 차이를 확인하세요</p>${compareHTML(g, it.q + chosen.q)}`
+    : chosen && chosen !== it ? `<p class="conf">고른 것: <b lang="ja">${chosen.q}</b> = ${chosen.r} ${chosen.k}</p>` : '';
+  const img = imgOf(it);
   say(it.q);
-  $('#fb').innerHTML = `<div class="ng"><div class="ngk" lang="ja">${it.q}</div><div class="ngr">${label(it)}</div>
+  $('#fb').innerHTML = `<div class="ng">${img ? `<img class="ngimg" src="${img}" alt="${it.q}" onerror="this.outerHTML='<div class=ngk lang=ja>${it.q}</div>'">` : `<div class="ngk" lang="ja">${it.q}</div>`}<div class="ngr">${label(it)}</div>
     <div class="mn">${it.e ? `<span class="emo">${it.e}</span>` : ''}<p>${it.m}</p></div>${conf}
     <button class="primary wide" id="go" onclick="A.next()">알겠어요 ▶</button></div>`;
   $('#go').focus();
@@ -457,7 +518,7 @@ function finishQuiz() {
       ${passed && nx ? `<button class="primary wide" onclick="A.open('${nx.id}')">다음: ${esc(nx.title)} ▶</button>` : ''}
       ${passed && l && !nx ? `<div class="trophy">🏆 1시간 과정 완주! 총 공부 시간 ${fmt(S.time)}</div>` : ''}
       ${Q.miss.length ? `<button class="${passed ? 'ghost' : 'primary'} wide" onclick="A.drill()">틀린 것만 연습 (${Q.miss.length})</button>` : ''}
-      ${l ? `<button class="ghost wide" onclick="A.open('${l.id}')">다시 하기</button>` : ''}
+      ${l ? `<button class="ghost wide" onclick="A.open('${l.id}')">다시 하기</button>` : Q.cfg.again ? `<button class="ghost wide" onclick="${Q.cfg.again}">다시 하기</button>` : ''}
       <button class="ghost wide" onclick="A.home()">홈으로</button></div></main>`;
 }
 function drill() {
@@ -479,6 +540,17 @@ function review() {
   const pick = pickWeak([...learned], 15);
   startQuiz({ items: pick.map(it => ({ it, cands: poolOf(it) })), need: 1, mode: 'mix' }, null);
 }
+
+// ───────── 닮은꼴 화면 ─────────
+function confuse(script) {
+  screen = 'conf';
+  app.innerHTML = `<header class="top"><div class="ttl">⚖️ 닮은꼴 구분</div></header>
+    <div class="tabs"><button class="${script === 'h' ? 'on' : ''}" onclick="A.confuse('h')" lang="ja">ひらがな</button><button class="${script === 'k' ? 'on' : ''}" onclick="A.confuse('k')" lang="ja">カタカナ</button></div>
+    <p class="legend">빨간 획 = 구분 포인트 · 화살표 = 쓰는 방향 · 글자를 누르면 발음</p>
+    <button class="big" onclick="A.cdrill('${script}')">🎯 ${script === 'h' ? '히라가나' : '가타카나'} 닮은꼴 전체 훈련</button>
+    ${CONFUSE.filter(g => g.s === script).map(g => compareHTML(g)).join('')}` + navbar('conf');
+}
+const cdrill = (script, gi) => startQuiz(confQuiz(script, gi), null);
 
 // ───────── 50음도 표 ─────────
 function chart(script) {
@@ -549,6 +621,7 @@ addEventListener('keydown', e => {
 });
 
 window.A = { home, open, pg, cd, say, clear, pick, typed, next: nextQ, drill, review, chart, peek, settings, reset, install,
+  vis: setVis, replay, cmp, confuse, cdrill,
   snd: v => { S.sound = v; save(); } };
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
