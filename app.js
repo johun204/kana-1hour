@@ -39,7 +39,8 @@ const PAGES = {
       <li>🔊 <b>다감각</b> — 소리 듣고 · 따라 말하고 · 손가락으로 따라 쓰기</li>
       <li>⚖️ <b>헷갈림 대비</b> — 비슷한 글자를 일부러 보기로 붙여서 구분 훈련</li>
      </ul>
-     <p class="tip">레슨 하나 = 약 2분. 카드의 이야기를 <b>소리 내어</b> 읽으면 효과가 2배!</p>`,
+     <p class="tip">레슨 하나 = 약 2분. 카드의 이야기를 <b>소리 내어</b> 읽으면 효과가 2배!</p>
+     <p class="sub">히라가나 연상법은 유튜브 <a href="https://youtu.be/oBsKRSooNTI" target="_blank" rel="noopener">방구석 일본어 「히라가나 쉽게 외우기」</a> 강의를 바탕으로 했어요.</p>`,
     `<h2>🔤 소리는 외울 필요가 없다</h2>
      <p>일본어 글자는 <b>자음 10줄 × 모음 5개</b> 표(50음도)로 되어 있어요.</p>
      <div class="vowels"><span>a<small>아</small></span><span>i<small>이</small></span><span>u<small>우</small></span><span>e<small>에</small></span><span>o<small>오</small></span></div>

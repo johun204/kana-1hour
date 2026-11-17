@@ -1,4 +1,4 @@
-const CACHE = 'kana1h-v2';
+const CACHE = 'kana1h-v3';
 const FILES = ['./', 'index.html', 'style.css', 'data.js', 'strokes.js', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 const H = 'aiueo ka ki ku ke ko sa shi su se so ta chi tsu te to na ni nu ne no ha hi fu he ho ma mi mu me mo ya yu yo ra ri ru re ro wa wo n'.split(' ').flatMap(r => r === 'aiueo' ? [...r] : [r]);
 const IMGS = ['h', 'k'].flatMap(s => H.map(r => `img/${s}-${r}.jpg`));
